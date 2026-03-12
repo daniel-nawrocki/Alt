@@ -221,39 +221,41 @@ button:active {
 
 .floating-toolkit {
   position: fixed;
-  right: 18px;
-  bottom: 18px;
+  right: 14px;
+  bottom: 14px;
   z-index: 50;
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 12px;
-  padding: 11px;
+  gap: 8px;
+  padding: 8px;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.94);
   box-shadow: var(--shadow-2);
   backdrop-filter: blur(6px);
+  max-width: 520px;
 }
 
 .toolkit-btn {
-  width: 102px;
-  min-height: 88px;
+  width: 84px;
+  min-height: 72px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 5px;
   margin-top: 0;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   color: #172536;
   background: linear-gradient(180deg, #ffffff 0%, #f0f6fb 100%);
+  padding: 8px 6px;
 }
 
 .toolkit-btn svg {
-  width: 30px;
-  height: 30px;
+  width: 24px;
+  height: 24px;
   stroke: currentColor;
   stroke-width: 1.9;
   stroke-linecap: round;
@@ -295,13 +297,14 @@ button:active {
   .floating-toolkit {
     right: 10px;
     bottom: 10px;
-    gap: 8px;
-    padding: 8px;
+    gap: 6px;
+    padding: 6px;
   }
 
   .toolkit-btn {
-    width: 92px;
-    min-height: 86px;
+    width: 74px;
+    min-height: 64px;
+    font-size: 10px;
   }
 }
 

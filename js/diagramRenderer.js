@@ -170,6 +170,7 @@ export class DiagramRenderer {
   }
 
   drawRelationships() {
+    if (this.stateRef.ui.showRelationships === false) return;
     const edges = this.stateRef.relationships?.edges || [];
     edges.forEach((edge) => {
       const fromHole = this.stateRef.holesById.get(edge.fromHoleId);
@@ -183,6 +184,7 @@ export class DiagramRenderer {
   }
 
   drawRelationshipDraft() {
+    if (this.stateRef.ui.showRelationships === false) return;
     const draft = this.stateRef.ui.relationshipDraft;
     if (!draft?.holeIds?.length) return;
     const points = draft.holeIds

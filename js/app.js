@@ -36,6 +36,7 @@ const state = {
   selection: new Set(),
   ui: {
     showGrid: true,
+    showRelationships: true,
     showOverlayText: true,
     toolMode: "origin",
     coordView: "collar",
@@ -64,6 +65,8 @@ const els = {
   idColumnSelect: document.getElementById("idColumnSelect"),
   importMappedBtn: document.getElementById("importMappedBtn"),
   gridToggle: document.getElementById("gridToggle"),
+  relationshipVisibilityToggle: document.getElementById("relationshipVisibilityToggle"),
+  relationshipVisibilityToggleSecondary: document.getElementById("relationshipVisibilityToggleSecondary"),
   fitViewBtn: document.getElementById("fitViewBtn"),
   coordViewSelect: document.getElementById("coordViewSelect"),
   rotateLeftBtn: document.getElementById("rotateLeftBtn"),
@@ -221,6 +224,13 @@ function renderRelationshipList() {
       </div>
     </div>`;
   }).join("");
+}
+
+function syncRelationshipVisibilityUi() {
+  els.relationshipVisibilityToggle.checked = state.ui.showRelationships;
+  if (els.relationshipVisibilityToggleSecondary) {
+    els.relationshipVisibilityToggleSecondary.checked = state.ui.showRelationships;
+  }
 }
 
 function renderTimingResults() {
@@ -467,6 +477,20 @@ els.gridToggle.addEventListener("change", () => {
   renderer.render();
 });
 
+els.relationshipVisibilityToggle.addEventListener("change", () => {
+  state.ui.showRelationships = els.relationshipVisibilityToggle.checked;
+  syncRelationshipVisibilityUi();
+  renderer.render();
+});
+
+if (els.relationshipVisibilityToggleSecondary) {
+  els.relationshipVisibilityToggleSecondary.addEventListener("change", () => {
+    state.ui.showRelationships = els.relationshipVisibilityToggleSecondary.checked;
+    syncRelationshipVisibilityUi();
+    renderer.render();
+  });
+}
+
 els.fitViewBtn.addEventListener("click", () => renderer.fitToData());
 els.coordViewSelect.addEventListener("change", () => applyCoordinateView(els.coordViewSelect.value, { fit: true }));
 els.rotateLeftBtn.addEventListener("click", () => renderer.rotateBy(-15));
@@ -556,6 +580,7 @@ ensureRelationshipState(state);
 setToolMode(state.ui.toolMode);
 els.coordViewSelect.value = state.ui.coordView;
 els.coordViewSelect.disabled = true;
+syncRelationshipVisibilityUi();
 renderOriginStatus();
 renderRelationshipList();
 renderTimingResults();

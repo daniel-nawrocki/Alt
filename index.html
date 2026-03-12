@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blast Diagram Planner</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Blast Diagram Planner</h1>
+    <div class="topbar-actions">
+      <button id="exportPdfBtn">Export PDF</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <section class="panel">
+        <h2>CSV Import</h2>
+        <label class="file-btn">Choose CSV
+          <input id="csvInput" type="file" accept=".csv,text/csv" hidden>
+        </label>
+        <div id="mappingPanel" class="mapping-panel hidden">
+          <label>Coordinate Type
+            <select id="coordTypeSelect">
+              <option value="stateplane">State Plane (X/Y)</option>
+              <option value="latlon">Latitude / Longitude</option>
+            </select>
+          </label>
+          <label>X Column
+            <select id="xColumnSelect"></select>
+          </label>
+          <label>Y Column
+            <select id="yColumnSelect"></select>
+          </label>
+          <label>Toe X Column (Optional)
+            <select id="toeXColumnSelect"></select>
+          </label>
+          <label>Toe Y Column (Optional)
+            <select id="toeYColumnSelect"></select>
+          </label>
+          <label>Hole ID Column
+            <select id="idColumnSelect"></select>
+          </label>
+          <button id="importMappedBtn">Import</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>View</h2>
+        <label><input id="gridToggle" type="checkbox" checked> Show Grid</label>
+        <button id="fitViewBtn">Fit View</button>
+        <label>Coordinate View
+          <select id="coordViewSelect">
+            <option value="collar">Collar</option>
+            <option value="toe">Toe</option>
+          </select>
+        </label>
+        <div class="row-actions">
+          <button id="rotateLeftBtn">Rotate -15 deg</button>
+          <button id="rotateRightBtn">Rotate +15 deg</button>
+        </div>
+        <div class="row-actions">
+          <button id="rotateFineLeftBtn">Rotate -1 deg</button>
+          <button id="rotateFineRightBtn">Rotate +1 deg</button>
+        </div>
+        <button id="rotateResetBtn">Reset Rotation</button>
+      </section>
+
+      <section class="panel">
+        <h2>Relationships</h2>
+        <div id="originStatus" class="status-chip">Origin: not set</div>
+        <div id="toolModeStatus" class="status-note">Tool: Select Origin</div>
+        <div class="row-actions">
+          <button id="clearRelationshipsBtn">Clear Relationships</button>
+          <button id="clearOriginBtn">Clear Origin</button>
+        </div>
+        <div id="relationshipList" class="list"></div>
+      </section>
+
+      <section class="panel">
+        <h2>Initiation</h2>
+        <button id="clearPathsBtn">Clear Paths</button>
+      </section>
+
+      <section class="panel">
+        <h2>Timing Ranges</h2>
+        <label>Hole-to-Hole Min (ms)
+          <input id="holeDelayMinInput" type="number" min="0" value="16">
+        </label>
+        <label>Hole-to-Hole Max (ms)
+          <input id="holeDelayMaxInput" type="number" min="0" value="34">
+        </label>
+        <label>Row-to-Row Min (ms)
+          <input id="rowDelayMinInput" type="number" min="0" value="84">
+        </label>
+        <label>Row-to-Row Max (ms)
+          <input id="rowDelayMaxInput" type="number" min="0" value="142">
+        </label>
+        <button id="solveTimingBtn">Find Timing Combinations</button>
+        <div id="timingResults" class="list"></div>
+      </section>
+    </aside>
+
+    <main class="canvas-wrap">
+      <canvas id="diagramCanvas" width="1300" height="800"></canvas>
+    </main>
+  </div>
+
+  <div class="floating-toolkit" aria-label="Tool Kit">
+    <button id="originToolBtn" class="toolkit-btn" type="button" title="Origin Tool" aria-label="Origin Tool">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="7"></circle>
+        <circle cx="12" cy="12" r="2"></circle>
+      </svg>
+      <span>Origin</span>
+    </button>
+    <button id="holeRelationToolBtn" class="toolkit-btn" type="button" title="Hole-to-Hole Tool" aria-label="Hole-to-Hole Tool">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="6" cy="18" r="2"></circle>
+        <circle cx="18" cy="6" r="2"></circle>
+        <path d="M8 16l8-8"></path>
+        <path d="M13 8h3v3"></path>
+      </svg>
+      <span>Hole-Hole</span>
+    </button>
+    <button id="rowRelationToolBtn" class="toolkit-btn" type="button" title="Row-to-Row Tool" aria-label="Row-to-Row Tool">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="6" cy="6" r="2"></circle>
+        <circle cx="18" cy="18" r="2"></circle>
+        <path d="M8 8l8 8"></path>
+        <path d="M16 13v3h-3"></path>
+      </svg>
+      <span>Row-Row</span>
+    </button>
+    <button id="offsetRelationToolBtn" class="toolkit-btn" type="button" title="Offset Tool" aria-label="Offset Tool">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="5" cy="12" r="2"></circle>
+        <circle cx="19" cy="12" r="2"></circle>
+        <path d="M7 12h10"></path>
+        <path d="M12 8l4 4-4 4"></path>
+      </svg>
+      <span>Offset</span>
+    </button>
+    <button id="initiationToolBtn" class="toolkit-btn" type="button" title="Initiation Path Tool" aria-label="Initiation Path Tool">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="6" cy="6" r="2"></circle>
+        <circle cx="18" cy="12" r="2"></circle>
+        <circle cx="8" cy="18" r="2"></circle>
+        <path d="M8 7.5l8 3M16.5 13.5l-7 3"></path>
+      </svg>
+      <span>Initiation</span>
+    </button>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
+

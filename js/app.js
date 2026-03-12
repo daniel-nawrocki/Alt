@@ -16,9 +16,18 @@ import {
 } from "./relationshipManager.js";
 
 const TOOL_TO_RELATIONSHIP_TYPE = {
-  holeRelationship: "holeToHole",
-  rowRelationship: "rowToRow",
+  holeRelationshipPositive: "holeToHole",
+  holeRelationshipNegative: "holeToHole",
+  rowRelationshipPositive: "rowToRow",
+  rowRelationshipNegative: "rowToRow",
   offsetRelationship: "offset",
+};
+
+const TOOL_TO_SIGN = {
+  holeRelationshipPositive: 1,
+  holeRelationshipNegative: -1,
+  rowRelationshipPositive: 1,
+  rowRelationshipNegative: -1,
 };
 
 const state = {
@@ -76,8 +85,10 @@ const els = {
   timingResults: document.getElementById("timingResults"),
   exportPdfBtn: document.getElementById("exportPdfBtn"),
   originToolBtn: document.getElementById("originToolBtn"),
-  holeRelationToolBtn: document.getElementById("holeRelationToolBtn"),
-  rowRelationToolBtn: document.getElementById("rowRelationToolBtn"),
+  holeRelationPositiveToolBtn: document.getElementById("holeRelationPositiveToolBtn"),
+  holeRelationNegativeToolBtn: document.getElementById("holeRelationNegativeToolBtn"),
+  rowRelationPositiveToolBtn: document.getElementById("rowRelationPositiveToolBtn"),
+  rowRelationNegativeToolBtn: document.getElementById("rowRelationNegativeToolBtn"),
   offsetRelationToolBtn: document.getElementById("offsetRelationToolBtn"),
   initiationToolBtn: document.getElementById("initiationToolBtn"),
 };
@@ -255,8 +266,10 @@ function setToolMode(mode) {
   state.ui.relationshipDraft = null;
   els.toolModeStatus.textContent = `Tool: ${relationToolLabel(mode)}`;
   els.originToolBtn.classList.toggle("active", mode === "origin");
-  els.holeRelationToolBtn.classList.toggle("active", mode === "holeRelationship");
-  els.rowRelationToolBtn.classList.toggle("active", mode === "rowRelationship");
+  els.holeRelationPositiveToolBtn.classList.toggle("active", mode === "holeRelationshipPositive");
+  els.holeRelationNegativeToolBtn.classList.toggle("active", mode === "holeRelationshipNegative");
+  els.rowRelationPositiveToolBtn.classList.toggle("active", mode === "rowRelationshipPositive");
+  els.rowRelationNegativeToolBtn.classList.toggle("active", mode === "rowRelationshipNegative");
   els.offsetRelationToolBtn.classList.toggle("active", mode === "offsetRelationship");
   els.initiationToolBtn.classList.toggle("active", mode === "initiation");
   renderer.render();
@@ -284,9 +297,28 @@ function promptRelationshipConfig(type, existing = null) {
   return { sign: normalized === "-" || normalized === "negative" ? -1 : 1 };
 }
 
-function finalizeRelationship(toHoleId) {
+function finalizeRelationshipPath(holeIds, relationshipType, sign) {
+  const uniquePath = [];
+  holeIds.forEach((holeId) => {
+    if (!holeId) return;
+    if (uniquePath[uniquePath.length - 1] === holeId) return;
+    uniquePath.push(holeId);
+  });
+  if (uniquePath.length < 2) return false;
+
+  for (let index = 0; index < uniquePath.length - 1; index += 1) {
+    const fromHoleId = uniquePath[index];
+    const toHoleId = uniquePath[index + 1];
+    if (fromHoleId === toHoleId) continue;
+    addRelationship(state, { type: relationshipType, fromHoleId, toHoleId, sign });
+  }
+  return true;
+}
+
+function finalizeOffsetRelationship(toHoleId) {
   const draft = state.ui.relationshipDraft;
-  if (!draft?.fromHoleId || !toHoleId || draft.fromHoleId === toHoleId) {
+  const fromHoleId = draft?.holeIds?.[0] || null;
+  if (!fromHoleId || !toHoleId || fromHoleId === toHoleId) {
     state.ui.relationshipDraft = null;
     renderer.render();
     return;
@@ -297,7 +329,7 @@ function finalizeRelationship(toHoleId) {
     renderer.render();
     return;
   }
-  addRelationship(state, { type: draft.type, fromHoleId: draft.fromHoleId, toHoleId, ...config });
+  addRelationship(state, { type: draft.type, fromHoleId, toHoleId, ...config });
   resetTimingResults();
   fullRefresh();
 }
@@ -318,7 +350,14 @@ function handleHoleClick(hole, event) {
 
   const relationshipType = TOOL_TO_RELATIONSHIP_TYPE[state.ui.toolMode];
   if (relationshipType) {
-    state.ui.relationshipDraft = { type: relationshipType, fromHoleId: hole.id, toHoleId: null };
+    if (!state.ui.relationshipDraft?.holeIds?.length) {
+      state.ui.relationshipDraft = { type: relationshipType, sign: TOOL_TO_SIGN[state.ui.toolMode] ?? 1, holeIds: [hole.id] };
+    } else if (state.ui.relationshipDraft.type === relationshipType) {
+      const holeIds = state.ui.relationshipDraft.holeIds;
+      if (holeIds[holeIds.length - 1] !== hole.id) holeIds.push(hole.id);
+    } else {
+      state.ui.relationshipDraft = { type: relationshipType, sign: TOOL_TO_SIGN[state.ui.toolMode] ?? 1, holeIds: [hole.id] };
+    }
     renderer.render();
     return;
   }
@@ -330,15 +369,32 @@ function handleHoleClick(hole, event) {
 }
 
 function handleHoleHover(hole) {
-  if (!state.ui.relationshipDraft?.fromHoleId) return;
-  state.ui.relationshipDraft.toHoleId = hole.id;
+  if (!state.ui.relationshipDraft?.holeIds?.length) return;
+  if (state.ui.relationshipDraft.type === "offset") return;
+  const holeIds = state.ui.relationshipDraft.holeIds;
+  if (holeIds[holeIds.length - 1] === hole.id) return;
+  holeIds.push(hole.id);
   renderer.render();
 }
 
 function handlePointerUp(payload) {
   if (state.ui.toolMode === "initiation") return;
-  if (!state.ui.relationshipDraft?.fromHoleId) return;
-  finalizeRelationship(payload?.hole?.id || null);
+  const draft = state.ui.relationshipDraft;
+  if (!draft?.holeIds?.length) return;
+
+  if (draft.type === "offset") {
+    finalizeOffsetRelationship(payload?.hole?.id || null);
+    return;
+  }
+
+  const created = finalizeRelationshipPath(draft.holeIds, draft.type, draft.sign);
+  state.ui.relationshipDraft = null;
+  if (created) {
+    resetTimingResults();
+    fullRefresh();
+    return;
+  }
+  renderer.render();
 }
 
 function editRelationship(edge) {
@@ -420,8 +476,10 @@ els.rotateFineRightBtn.addEventListener("click", () => renderer.rotateBy(1));
 els.rotateResetBtn.addEventListener("click", () => renderer.resetRotation());
 
 els.originToolBtn.addEventListener("click", () => setToolMode("origin"));
-els.holeRelationToolBtn.addEventListener("click", () => setToolMode("holeRelationship"));
-els.rowRelationToolBtn.addEventListener("click", () => setToolMode("rowRelationship"));
+els.holeRelationPositiveToolBtn.addEventListener("click", () => setToolMode("holeRelationshipPositive"));
+els.holeRelationNegativeToolBtn.addEventListener("click", () => setToolMode("holeRelationshipNegative"));
+els.rowRelationPositiveToolBtn.addEventListener("click", () => setToolMode("rowRelationshipPositive"));
+els.rowRelationNegativeToolBtn.addEventListener("click", () => setToolMode("rowRelationshipNegative"));
 els.offsetRelationToolBtn.addEventListener("click", () => setToolMode("offsetRelationship"));
 els.initiationToolBtn.addEventListener("click", () => setToolMode("initiation"));
 

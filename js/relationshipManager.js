@@ -85,10 +85,14 @@ export function relationToolLabel(mode) {
   switch (mode) {
     case "origin":
       return "Select Origin";
-    case "holeRelationship":
-      return "Hole-to-Hole";
-    case "rowRelationship":
-      return "Row-to-Row";
+    case "holeRelationshipPositive":
+      return "Hole-to-Hole +";
+    case "holeRelationshipNegative":
+      return "Hole-to-Hole -";
+    case "rowRelationshipPositive":
+      return "Row-to-Row +";
+    case "rowRelationshipNegative":
+      return "Row-to-Row -";
     case "offsetRelationship":
       return "Offset";
     case "initiation":

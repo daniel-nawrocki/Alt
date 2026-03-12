@@ -1,4 +1,4 @@
-import { relationshipColor, relationshipLabel } from "./relationshipManager.js";
+import { relationshipColor } from "./relationshipManager.js";
 
 function timingColor(value, min, max) {
   if (!Number.isFinite(value)) return "#64748b";
@@ -169,26 +169,6 @@ export class DiagramRenderer {
     this.ctx.restore();
   }
 
-  drawRelationshipLabel(edge, start, end, color) {
-    const midX = (start.x + end.x) / 2;
-    const midY = (start.y + end.y) / 2;
-    let text = "";
-    if (edge.type === "offset") {
-      const value = Number(edge.offsetMs) || 0;
-      text = `${value >= 0 ? "+" : ""}${value} ms`;
-    } else {
-      text = `${relationshipLabel(edge.type)} ${edge.sign === -1 ? "-" : "+"}`;
-    }
-    this.ctx.save();
-    this.ctx.font = "11px Segoe UI";
-    const width = this.ctx.measureText(text).width;
-    this.ctx.fillStyle = "rgba(255,255,255,0.92)";
-    this.ctx.fillRect(midX - width / 2 - 5, midY - 10, width + 10, 16);
-    this.ctx.fillStyle = color;
-    this.ctx.fillText(text, midX - width / 2, midY + 2);
-    this.ctx.restore();
-  }
-
   drawRelationships() {
     const edges = this.stateRef.relationships?.edges || [];
     edges.forEach((edge) => {
@@ -199,23 +179,32 @@ export class DiagramRenderer {
       const end = this.worldToScreen(toHole.x, toHole.y);
       const color = relationshipColor(edge.type);
       this.drawArrow(start, end, color);
-      this.drawRelationshipLabel(edge, start, end, color);
     });
   }
 
   drawRelationshipDraft() {
     const draft = this.stateRef.ui.relationshipDraft;
-    if (!draft?.fromHoleId) return;
-    const fromHole = this.stateRef.holesById.get(draft.fromHoleId);
-    if (!fromHole) return;
-    const start = this.worldToScreen(fromHole.x, fromHole.y);
-    let end = this.pointerScreen;
-    if (draft.toHoleId) {
-      const toHole = this.stateRef.holesById.get(draft.toHoleId);
-      if (toHole) end = this.worldToScreen(toHole.x, toHole.y);
-    }
-    if (!end) return;
-    this.drawArrow(start, end, relationshipColor(draft.type || "holeToHole"), true);
+    if (!draft?.holeIds?.length) return;
+    const points = draft.holeIds
+      .map((holeId) => this.stateRef.holesById.get(holeId))
+      .filter(Boolean)
+      .map((hole) => this.worldToScreen(hole.x, hole.y));
+    if (!points.length) return;
+    if (this.pointerScreen && draft.type !== "offset") points.push(this.pointerScreen);
+    if (draft.type === "offset" && draft.holeIds.length === 1 && this.pointerScreen) points.push(this.pointerScreen);
+    if (points.length < 2) return;
+
+    this.ctx.save();
+    this.ctx.strokeStyle = relationshipColor(draft.type || "holeToHole");
+    this.ctx.lineWidth = 2;
+    this.ctx.setLineDash([6, 4]);
+    this.ctx.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) this.ctx.moveTo(point.x, point.y);
+      else this.ctx.lineTo(point.x, point.y);
+    });
+    this.ctx.stroke();
+    this.ctx.restore();
   }
 
   drawInitiationLines() {
@@ -368,7 +357,7 @@ export class DiagramRenderer {
       const hoverHole = this.findHoleAtScreen(this.pointerScreen.x, this.pointerScreen.y);
       if ((event.buttons & 1) === 1 && hoverHole) this.onHoleHover(hoverHole, event);
       if (!this.dragging || !this.lastMouse) {
-        if (this.stateRef.ui.relationshipDraft?.fromHoleId) this.render();
+        if (this.stateRef.ui.relationshipDraft?.holeIds?.length) this.render();
         return;
       }
       const dx = event.clientX - this.lastMouse.x;

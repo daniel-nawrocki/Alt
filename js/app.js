@@ -47,6 +47,8 @@ const state = {
       activeSpeedMultiplier: 1,
       isPlaying: false,
       startTimestamp: 0,
+      lastFrameTimestamp: 0,
+      tailStartTimestamp: 0,
       elapsedMs: 0,
       completed: false,
       resultIndexAtStart: -1,
@@ -349,6 +351,8 @@ function resetTimingVisualization({ preserveSpeed = true } = {}) {
   playback.activeSpeedMultiplier = speedMultiplier;
   playback.isPlaying = false;
   playback.startTimestamp = 0;
+  playback.lastFrameTimestamp = 0;
+  playback.tailStartTimestamp = 0;
   playback.elapsedMs = 0;
   playback.completed = false;
   playback.resultIndexAtStart = -1;
@@ -361,6 +365,8 @@ function stopTimingVisualization({ completed = false, preserveElapsed = false } 
   playback.frameRequestId = null;
   playback.isPlaying = false;
   playback.startTimestamp = 0;
+  playback.lastFrameTimestamp = 0;
+  playback.tailStartTimestamp = 0;
   playback.completed = completed;
   playback.resultIndexAtStart = -1;
   if (!preserveElapsed) playback.elapsedMs = 0;
@@ -410,16 +416,22 @@ function stepTimingVisualization(now) {
   }
 
   const durationMs = Number.isFinite(result.endTime) ? result.endTime : 0;
-  const playbackDurationMs = durationMs + TIMING_VISUALIZATION_TAIL_MS;
   if (durationMs <= 0) {
     playback.elapsedMs = 0;
     stopTimingVisualization({ completed: true });
     return;
   }
 
-  playback.elapsedMs = Math.max(0, (now - playback.startTimestamp) * playback.activeSpeedMultiplier);
-  if (playback.elapsedMs >= playbackDurationMs) {
-    playback.elapsedMs = playbackDurationMs;
+  if (!playback.lastFrameTimestamp) playback.lastFrameTimestamp = now;
+  const deltaMs = Math.max(0, now - playback.lastFrameTimestamp);
+  playback.lastFrameTimestamp = now;
+  if (!playback.tailStartTimestamp) {
+    playback.elapsedMs += deltaMs * playback.activeSpeedMultiplier;
+    if (playback.elapsedMs >= durationMs) {
+      playback.elapsedMs = durationMs;
+      playback.tailStartTimestamp = now;
+    }
+  } else if ((now - playback.tailStartTimestamp) >= TIMING_VISUALIZATION_TAIL_MS) {
     renderer.render();
     stopTimingVisualization({ completed: true, preserveElapsed: true });
     return;
@@ -441,6 +453,8 @@ function startTimingVisualization() {
   playback.activeSpeedMultiplier = playback.speedMultiplier;
   playback.isPlaying = true;
   playback.startTimestamp = performance.now();
+  playback.lastFrameTimestamp = playback.startTimestamp;
+  playback.tailStartTimestamp = 0;
   playback.elapsedMs = 0;
   playback.completed = false;
   playback.resultIndexAtStart = state.ui.activeTimingPreviewIndex;
@@ -895,7 +909,10 @@ els.timingVisualizationBtn.addEventListener("click", () => {
 
 els.timingVisualizationSpeed.addEventListener("change", () => {
   const speedMultiplier = Number(els.timingVisualizationSpeed.value);
-  timingVisualizationState().speedMultiplier = Number.isFinite(speedMultiplier) && speedMultiplier > 0 ? speedMultiplier : 1;
+  const playback = timingVisualizationState();
+  const normalizedSpeed = Number.isFinite(speedMultiplier) && speedMultiplier > 0 ? speedMultiplier : 1;
+  playback.speedMultiplier = normalizedSpeed;
+  if (playback.isPlaying) playback.activeSpeedMultiplier = normalizedSpeed;
   renderTimingVisualizationControls();
 });
 

@@ -63,6 +63,7 @@ const printState = {
     activeTimingPreviewIndex: 0,
     relationshipDraft: null,
     textScale: 1,
+    orientation: "landscape",
   },
   relationships: { originHoleId: null, edges: [], nextId: 1 },
   timingResults: [],
@@ -101,6 +102,7 @@ const els = {
   offsetDelayMax: document.getElementById("offsetDelayMaxInput"),
   solveTimingBtn: document.getElementById("solveTimingBtn"),
   timingResults: document.getElementById("timingResults"),
+  helpBtn: document.getElementById("helpBtn"),
   exportPdfBtn: document.getElementById("exportPdfBtn"),
   originToolBtn: document.getElementById("originToolBtn"),
   holeRelationPositiveToolBtn: document.getElementById("holeRelationPositiveToolBtn"),
@@ -117,8 +119,11 @@ const els = {
   printActionBtn: document.getElementById("printActionBtn"),
   printFitBtn: document.getElementById("printFitBtn"),
   printTextScaleInput: document.getElementById("printTextScaleInput"),
+  printOrientationSelect: document.getElementById("printOrientationSelect"),
   printColorModeToggle: document.getElementById("printColorModeToggle"),
   printRelationshipToggle: document.getElementById("printRelationshipToggle"),
+  helpWorkspace: document.getElementById("helpWorkspace"),
+  helpBackBtn: document.getElementById("helpBackBtn"),
 };
 
 const renderer = new DiagramRenderer(document.getElementById("diagramCanvas"), {
@@ -200,12 +205,23 @@ function loadPrintState(selectedTiming) {
   printState.ui.showRelationships = state.ui.showRelationships;
   printState.ui.showOverlayText = true;
   printState.ui.textScale = Number(els.printTextScaleInput.value) || 1;
+  printState.ui.orientation = "landscape";
 }
 
 function syncPrintControls() {
   els.printTextScaleInput.value = String(printState.ui.textScale || 1);
+  els.printOrientationSelect.value = printState.ui.orientation || "landscape";
   els.printRelationshipToggle.checked = printState.ui.showRelationships !== false;
   els.printColorModeToggle.checked = !els.printPaperFrame.classList.contains("greyscale");
+}
+
+function applyPrintOrientation() {
+  const orientation = els.printOrientationSelect.value === "portrait" ? "portrait" : "landscape";
+  printState.ui.orientation = orientation;
+  els.printWorkspace.classList.toggle("portrait", orientation === "portrait");
+  els.printWorkspace.classList.toggle("landscape", orientation === "landscape");
+  els.printPaperFrame.classList.toggle("portrait", orientation === "portrait");
+  els.printPaperFrame.classList.toggle("landscape", orientation === "landscape");
 }
 
 function openPrintWorkspace() {
@@ -218,6 +234,8 @@ function openPrintWorkspace() {
   els.printPaperFrame.classList.remove("greyscale");
   els.printColorModeToggle.checked = true;
   syncPrintControls();
+  applyPrintOrientation();
+  closeHelpWorkspace();
   document.body.classList.add("print-preview-active");
   els.printWorkspace.classList.remove("hidden");
   closeAllMenus();
@@ -233,10 +251,23 @@ function closePrintWorkspace() {
   els.printWorkspace.classList.add("hidden");
 }
 
+function openHelpWorkspace() {
+  closeAllMenus();
+  closePrintWorkspace();
+  document.body.classList.add("help-active");
+  els.helpWorkspace.classList.remove("hidden");
+}
+
+function closeHelpWorkspace() {
+  document.body.classList.remove("help-active");
+  els.helpWorkspace.classList.add("hidden");
+}
+
 function applyPrintSettings() {
   printState.ui.textScale = Number(els.printTextScaleInput.value) || 1;
   printState.ui.showRelationships = els.printRelationshipToggle.checked;
   els.printPaperFrame.classList.toggle("greyscale", !els.printColorModeToggle.checked);
+  applyPrintOrientation();
   printRenderer.render();
 }
 
@@ -670,14 +701,24 @@ els.exportPdfBtn.addEventListener("click", () => {
   openPrintWorkspace();
 });
 
+els.helpBtn.addEventListener("click", () => openHelpWorkspace());
+els.helpBackBtn.addEventListener("click", () => closeHelpWorkspace());
 els.printBackBtn.addEventListener("click", () => closePrintWorkspace());
 els.printFitBtn.addEventListener("click", () => printRenderer.fitToData());
 els.printTextScaleInput.addEventListener("input", () => applyPrintSettings());
+els.printOrientationSelect.addEventListener("change", () => {
+  applyPrintSettings();
+  printRenderer.fitToData();
+});
 els.printColorModeToggle.addEventListener("change", () => applyPrintSettings());
 els.printRelationshipToggle.addEventListener("change", () => applyPrintSettings());
 els.printActionBtn.addEventListener("click", () => {
   window.print();
   closePrintWorkspace();
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && !els.helpWorkspace.classList.contains("hidden")) closeHelpWorkspace();
 });
 
 ensureRelationshipState(state);

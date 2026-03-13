@@ -93,6 +93,8 @@ const els = {
   rowRelationPositiveToolBtn: document.getElementById("rowRelationPositiveToolBtn"),
   rowRelationNegativeToolBtn: document.getElementById("rowRelationNegativeToolBtn"),
   offsetRelationToolBtn: document.getElementById("offsetRelationToolBtn"),
+  menuToggles: [...document.querySelectorAll("[data-menu-toggle]")],
+  menuPanels: [...document.querySelectorAll(".menu-panel")],
 };
 
 const renderer = new DiagramRenderer(document.getElementById("diagramCanvas"), {
@@ -107,6 +109,40 @@ initTimingControls(state, els, () => {
   resetTimingResults();
   renderer.render();
 });
+
+function closeAllMenus() {
+  els.menuPanels.forEach((panel) => panel.classList.add("hidden"));
+  els.menuToggles.forEach((button) => button.classList.remove("active"));
+}
+
+function toggleMenu(menuId) {
+  const panel = document.getElementById(menuId);
+  const button = els.menuToggles.find((item) => item.dataset.menuToggle === menuId);
+  if (!panel || !button) return;
+  const opening = panel.classList.contains("hidden");
+  closeAllMenus();
+  if (!opening) return;
+  panel.classList.remove("hidden");
+  button.classList.add("active");
+}
+
+function initMenuToggles() {
+  els.menuToggles.forEach((button) => {
+    button.addEventListener("click", (event) => {
+      event.stopPropagation();
+      toggleMenu(button.dataset.menuToggle);
+    });
+  });
+
+  els.menuPanels.forEach((panel) => {
+    panel.addEventListener("click", (event) => event.stopPropagation());
+  });
+
+  document.addEventListener("click", () => closeAllMenus());
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeAllMenus();
+  });
+}
 
 function resetTimingResults(message = "") {
   state.timingResults = [];
@@ -552,4 +588,5 @@ syncRelationshipVisibilityUi();
 renderOriginStatus();
 renderRelationshipList();
 renderTimingResults();
+initMenuToggles();
 renderer.render();

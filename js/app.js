@@ -103,6 +103,7 @@ const els = {
   solveTimingBtn: document.getElementById("solveTimingBtn"),
   timingResults: document.getElementById("timingResults"),
   helpBtn: document.getElementById("helpBtn"),
+  csvExportBtn: document.getElementById("csvExportBtn"),
   exportPdfBtn: document.getElementById("exportPdfBtn"),
   originToolBtn: document.getElementById("originToolBtn"),
   holeRelationPositiveToolBtn: document.getElementById("holeRelationPositiveToolBtn"),
@@ -269,6 +270,47 @@ function applyPrintSettings() {
   els.printPaperFrame.classList.toggle("greyscale", !els.printColorModeToggle.checked);
   applyPrintOrientation();
   printRenderer.render();
+}
+
+function csvEscape(value) {
+  const text = value === null || value === undefined ? "" : String(value);
+  if (!/[",\n\r]/.test(text)) return text;
+  return `"${text.replace(/"/g, "\"\"")}"`;
+}
+
+function exportSelectedTimingCsv() {
+  const selectedTiming = state.timingResults[state.ui.activeTimingPreviewIndex] || null;
+  if (!selectedTiming) {
+    window.alert("Select a timing result first, then export CSV.");
+    return;
+  }
+
+  const rows = state.holes.map((hole) => {
+    const originalX = hole.collar?.original?.x ?? hole.original?.x ?? "";
+    const originalY = hole.collar?.original?.y ?? hole.original?.y ?? "";
+    const delayTime = selectedTiming.holeTimes instanceof Map ? selectedTiming.holeTimes.get(hole.id) : undefined;
+    return [
+      hole.holeNumber || hole.id,
+      originalX,
+      originalY,
+      Number.isFinite(delayTime) ? delayTime : "",
+    ];
+  });
+
+  const csvText = [
+    ["hole_number", "x", "y", "delay_time_ms"],
+    ...rows,
+  ].map((row) => row.map(csvEscape).join(",")).join("\r\n");
+
+  const blob = new Blob([csvText], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "timing-delays.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 function resetTimingResults(message = "") {
@@ -702,6 +744,7 @@ els.exportPdfBtn.addEventListener("click", () => {
 });
 
 els.helpBtn.addEventListener("click", () => openHelpWorkspace());
+els.csvExportBtn.addEventListener("click", () => exportSelectedTimingCsv());
 els.helpBackBtn.addEventListener("click", () => closeHelpWorkspace());
 els.printBackBtn.addEventListener("click", () => closePrintWorkspace());
 els.printFitBtn.addEventListener("click", () => printRenderer.fitToData());

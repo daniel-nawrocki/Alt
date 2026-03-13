@@ -77,7 +77,7 @@
       </div>
 
       <div class="top-menu">
-        <button class="menu-toggle" type="button" data-menu-toggle="relationshipMenu">Relationships</button>
+        <button class="menu-toggle" type="button" data-menu-toggle="relationshipMenu">Pathing</button>
         <section id="relationshipMenu" class="menu-panel panel hidden">
           <h2>Relationships</h2>
           <div id="originStatus" class="status-chip">Origin: not set</div>
@@ -92,7 +92,7 @@
       </div>
 
       <div class="top-menu">
-        <button class="menu-toggle" type="button" data-menu-toggle="timingMenu">Timing</button>
+        <button class="menu-toggle" type="button" data-menu-toggle="timingMenu">Timing Ranges</button>
         <section id="timingMenu" class="menu-panel panel hidden">
           <h2>Timing Ranges</h2>
           <label>Hole-to-Hole Min (ms)
@@ -113,10 +113,11 @@
           <label>Offset Max (ms)
             <input id="offsetDelayMaxInput" type="number" min="0" value="42">
           </label>
-          <button id="solveTimingBtn">Find Timing Combinations</button>
           <div id="timingResults" class="list"></div>
         </section>
       </div>
+
+      <button id="solveTimingBtn" class="menu-action-btn" type="button">Run Timing Combinations</button>
     </div>
 
     <canvas id="diagramCanvas" width="1300" height="800"></canvas>

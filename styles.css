@@ -274,6 +274,28 @@ button:active {
   color: var(--accent-ink);
 }
 
+.menu-action-btn {
+  width: auto;
+  min-width: 190px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(47, 125, 246, 0.42);
+  background: linear-gradient(180deg, #f7fbff 0%, #e9f2ff 100%);
+  color: var(--accent-ink);
+  box-shadow: 0 10px 24px rgba(15, 32, 56, 0.12);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  pointer-events: auto;
+}
+
+.menu-action-btn:hover,
+.menu-action-btn:focus {
+  border-color: rgba(47, 125, 246, 0.68);
+  background: linear-gradient(180deg, #ffffff 0%, #deebff 100%);
+}
+
 .menu-panel {
   position: absolute;
   top: calc(100% + var(--space-2));
@@ -687,6 +709,10 @@ body.help-active .print-workspace {
 
   .menu-toggle {
     min-width: 94px;
+  }
+
+  .menu-action-btn {
+    min-width: 178px;
   }
 
   .menu-panel {

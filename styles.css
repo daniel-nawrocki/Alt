@@ -229,39 +229,41 @@ button:active {
   flex-direction: column;
   align-items: flex-end;
   justify-content: center;
-  padding: 6px 10px;
-  border: 1px solid rgba(159, 179, 201, 0.35);
-  border-radius: 12px;
-  background: rgba(255, 255, 255, 0.08);
+  padding: 4px 8px;
 }
 
 .timing-visualization-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: 6px;
 }
 
 .timing-visualization-row button {
   flex: 0 0 auto;
+  min-width: 118px;
+  padding: 7px 12px;
+  font-size: 10px;
 }
 
 .timing-visualization-row label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin: 0;
-  font-size: 12px;
+  font-size: 9px;
   font-weight: 700;
   color: #f7fbff;
 }
 
 .timing-visualization-row select {
-  min-width: 84px;
+  min-width: 64px;
+  padding: 6px 8px;
+  font-size: 10px;
 }
 
 .timing-visualization-status {
-  margin-top: 4px;
-  font-size: 11px;
+  margin-top: 3px;
+  font-size: 8px;
   font-weight: 700;
   letter-spacing: 0.2px;
   color: rgba(247, 251, 255, 0.82);

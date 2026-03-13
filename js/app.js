@@ -121,7 +121,6 @@ const els = {
   printActionBtn: document.getElementById("printActionBtn"),
   printFitBtn: document.getElementById("printFitBtn"),
   printTextScaleInput: document.getElementById("printTextScaleInput"),
-  printOrientationSelect: document.getElementById("printOrientationSelect"),
   printColorModeToggle: document.getElementById("printColorModeToggle"),
   printRelationshipToggle: document.getElementById("printRelationshipToggle"),
   helpWorkspace: document.getElementById("helpWorkspace"),
@@ -222,18 +221,12 @@ function loadPrintState(selectedTiming) {
 
 function syncPrintControls() {
   els.printTextScaleInput.value = String(printState.ui.textScale || 1);
-  els.printOrientationSelect.value = printState.ui.orientation || "landscape";
   els.printRelationshipToggle.checked = printState.ui.showRelationships !== false;
   els.printColorModeToggle.checked = !els.printPaperFrame.classList.contains("greyscale");
 }
 
 function applyPrintOrientation() {
-  const orientation = els.printOrientationSelect.value === "portrait" ? "portrait" : "landscape";
-  printState.ui.orientation = orientation;
-  els.printWorkspace.classList.toggle("portrait", orientation === "portrait");
-  els.printWorkspace.classList.toggle("landscape", orientation === "landscape");
-  els.printPaperFrame.classList.toggle("portrait", orientation === "portrait");
-  els.printPaperFrame.classList.toggle("landscape", orientation === "landscape");
+  printState.ui.orientation = "landscape";
 }
 
 function openPrintWorkspace() {
@@ -768,10 +761,6 @@ els.helpBackBtn.addEventListener("click", () => closeHelpWorkspace());
 els.printBackBtn.addEventListener("click", () => closePrintWorkspace());
 els.printFitBtn.addEventListener("click", () => printRenderer.fitToData());
 els.printTextScaleInput.addEventListener("input", () => applyPrintSettings());
-els.printOrientationSelect.addEventListener("change", () => {
-  applyPrintSettings();
-  printRenderer.fitToData();
-});
 els.printColorModeToggle.addEventListener("change", () => applyPrintSettings());
 els.printRelationshipToggle.addEventListener("change", () => applyPrintSettings());
 els.printActionBtn.addEventListener("click", () => {

@@ -573,23 +573,13 @@ button:active {
 }
 
 .print-paper-frame {
-  width: min(900px, calc(100vw - 80px));
+  width: min(1100px, calc(100vw - 80px));
   aspect-ratio: 11 / 8.5;
   background: #ffffff;
   border: 2px solid rgba(43, 61, 82, 0.35);
   box-shadow: 0 28px 50px rgba(15, 32, 56, 0.18);
   padding: 22px;
   position: relative;
-}
-
-.print-paper-frame.portrait {
-  width: min(900px, calc(100vw - 80px));
-  aspect-ratio: 8.5 / 11;
-}
-
-.print-paper-frame.landscape {
-  width: min(1100px, calc(100vw - 80px));
-  aspect-ratio: 11 / 8.5;
 }
 
 .print-paper-frame::before {
@@ -779,11 +769,6 @@ body.help-active .print-workspace {
     margin: 0;
   }
 
-  @page print-portrait {
-    size: portrait;
-    margin: 0;
-  }
-
   body * {
     visibility: hidden;
   }
@@ -799,12 +784,8 @@ body.help-active .print-workspace {
     background: #ffffff;
   }
 
-  .print-workspace.landscape {
+  .print-workspace {
     page: print-landscape;
-  }
-
-  .print-workspace.portrait {
-    page: print-portrait;
   }
 
   .print-toolbar {

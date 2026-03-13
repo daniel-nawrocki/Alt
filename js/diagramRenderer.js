@@ -48,6 +48,10 @@ export class DiagramRenderer {
     this.render();
   }
 
+  textScale() {
+    return Number(this.stateRef?.ui?.textScale) || 1;
+  }
+
   rotatePoint(x, y) {
     const theta = (this.rotationDeg * Math.PI) / 180;
     const c = Math.cos(theta);
@@ -142,7 +146,7 @@ export class DiagramRenderer {
     this.ctx.moveTo(tx, ty);
     this.ctx.lineTo(bx, by);
     this.ctx.stroke();
-    this.ctx.font = "bold 13px Segoe UI";
+    this.ctx.font = `bold ${Math.max(10, Math.round(13 * this.textScale()))}px Segoe UI`;
     this.ctx.fillText("N", nx - 5, ny - 8);
     this.ctx.restore();
   }
@@ -240,13 +244,14 @@ export class DiagramRenderer {
       if (showLabels) {
         const label = hole.holeNumber || hole.id;
         this.ctx.fillStyle = "#111827";
-        this.ctx.font = selected || isOrigin ? "bold 11px Segoe UI" : "11px Segoe UI";
+        const labelSize = Math.max(9, Math.round(11 * this.textScale()));
+        this.ctx.font = selected || isOrigin ? `bold ${labelSize}px Segoe UI` : `${labelSize}px Segoe UI`;
         this.ctx.fillText(label, point.x + 8, point.y - 6);
       }
 
       if (showTiming && preview && Number.isFinite(time)) {
         this.ctx.fillStyle = "#334155";
-        this.ctx.font = "10px Segoe UI";
+        this.ctx.font = `${Math.max(8, Math.round(10 * this.textScale()))}px Segoe UI`;
         this.ctx.fillText(`${time.toFixed(0)}ms`, point.x + 8, point.y + 8);
       }
     }
@@ -263,7 +268,7 @@ export class DiagramRenderer {
     if (!preview) return;
     this.ctx.save();
     this.ctx.fillStyle = "#0f172a";
-    this.ctx.font = "12px Segoe UI";
+    this.ctx.font = `${Math.max(10, Math.round(12 * this.textScale()))}px Segoe UI`;
     this.ctx.fillText(
       `Timing Preview: H2H ${preview.holeDelay}ms | R2R ${preview.rowDelay}ms | Peak(8ms): ${preview.density8ms}`,
       14,
@@ -375,6 +380,10 @@ export class DiagramRenderer {
 
     this.canvas.addEventListener("wheel", (event) => {
       event.preventDefault();
+      if (event.ctrlKey) {
+        this.rotateBy(event.deltaY < 0 ? 1 : -1);
+        return;
+      }
       const rect = this.canvas.getBoundingClientRect();
       const mouseX = event.clientX - rect.left;
       const mouseY = event.clientY - rect.top;

@@ -2,7 +2,6 @@ import { parseCsvText, buildHolesFromMapping } from "./csvParser.js";
 import { DiagramRenderer } from "./diagramRenderer.js";
 import { initTimingControls } from "./timingControls.js";
 import { solveTimingCombinations, formatTimingResult, validateTimingGraph } from "./timingSolver.js";
-import { exportTimingPdfFromCanvas } from "./pdfExport.js";
 import {
   addRelationship,
   clearRelationships,
@@ -53,6 +52,22 @@ const state = {
   solverMessage: "",
 };
 
+const printState = {
+  holes: [],
+  holesById: new Map(),
+  selection: new Set(),
+  ui: {
+    showGrid: false,
+    showRelationships: true,
+    showOverlayText: true,
+    activeTimingPreviewIndex: 0,
+    relationshipDraft: null,
+    textScale: 1,
+  },
+  relationships: { originHoleId: null, edges: [], nextId: 1 },
+  timingResults: [],
+};
+
 const els = {
   csvInput: document.getElementById("csvInput"),
   mappingPanel: document.getElementById("mappingPanel"),
@@ -95,6 +110,15 @@ const els = {
   offsetRelationToolBtn: document.getElementById("offsetRelationToolBtn"),
   menuToggles: [...document.querySelectorAll("[data-menu-toggle]")],
   menuPanels: [...document.querySelectorAll(".menu-panel")],
+  printWorkspace: document.getElementById("printWorkspace"),
+  printCanvas: document.getElementById("printCanvas"),
+  printPaperFrame: document.getElementById("printPaperFrame"),
+  printBackBtn: document.getElementById("printBackBtn"),
+  printActionBtn: document.getElementById("printActionBtn"),
+  printFitBtn: document.getElementById("printFitBtn"),
+  printTextScaleInput: document.getElementById("printTextScaleInput"),
+  printColorModeToggle: document.getElementById("printColorModeToggle"),
+  printRelationshipToggle: document.getElementById("printRelationshipToggle"),
 };
 
 const renderer = new DiagramRenderer(document.getElementById("diagramCanvas"), {
@@ -102,6 +126,14 @@ const renderer = new DiagramRenderer(document.getElementById("diagramCanvas"), {
   onHoleClick: handleHoleClick,
   onHoleHover: handleHoleHover,
   onPointerUp: handlePointerUp,
+  onHoleContextMenu: () => {},
+});
+
+const printRenderer = new DiagramRenderer(document.getElementById("printCanvas"), {
+  stateRef: printState,
+  onHoleClick: () => {},
+  onHoleHover: () => {},
+  onPointerUp: () => {},
   onHoleContextMenu: () => {},
 });
 
@@ -142,6 +174,70 @@ function initMenuToggles() {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeAllMenus();
   });
+}
+
+function cloneSelectedTiming(selectedTiming) {
+  if (!selectedTiming) return [];
+  return [{
+    ...selectedTiming,
+    holeTimes: new Map(selectedTiming.holeTimes),
+    offsetAssignments: selectedTiming.offsetAssignments ? new Map(selectedTiming.offsetAssignments) : new Map(),
+  }];
+}
+
+function loadPrintState(selectedTiming) {
+  printState.holes = state.holes.map((hole) => ({ ...hole }));
+  printState.holesById = new Map(printState.holes.map((hole) => [hole.id, hole]));
+  printState.selection = new Set();
+  printState.relationships = {
+    originHoleId: state.relationships.originHoleId,
+    edges: state.relationships.edges.map((edge) => ({ ...edge })),
+    nextId: state.relationships.nextId,
+  };
+  printState.timingResults = cloneSelectedTiming(selectedTiming);
+  printState.ui.activeTimingPreviewIndex = printState.timingResults.length ? 0 : -1;
+  printState.ui.showGrid = false;
+  printState.ui.showRelationships = state.ui.showRelationships;
+  printState.ui.showOverlayText = true;
+  printState.ui.textScale = Number(els.printTextScaleInput.value) || 1;
+}
+
+function syncPrintControls() {
+  els.printTextScaleInput.value = String(printState.ui.textScale || 1);
+  els.printRelationshipToggle.checked = printState.ui.showRelationships !== false;
+  els.printColorModeToggle.checked = !els.printPaperFrame.classList.contains("greyscale");
+}
+
+function openPrintWorkspace() {
+  const selectedTiming = state.timingResults[state.ui.activeTimingPreviewIndex] || null;
+  if (!selectedTiming) {
+    window.alert("Select a timing result first, then open print preview.");
+    return;
+  }
+  loadPrintState(selectedTiming);
+  els.printPaperFrame.classList.remove("greyscale");
+  els.printColorModeToggle.checked = true;
+  syncPrintControls();
+  document.body.classList.add("print-preview-active");
+  els.printWorkspace.classList.remove("hidden");
+  closeAllMenus();
+  requestAnimationFrame(() => {
+    printRenderer.resize();
+    printRenderer.rotationDeg = renderer.rotationDeg;
+    printRenderer.fitToData();
+  });
+}
+
+function closePrintWorkspace() {
+  document.body.classList.remove("print-preview-active");
+  els.printWorkspace.classList.add("hidden");
+}
+
+function applyPrintSettings() {
+  printState.ui.textScale = Number(els.printTextScaleInput.value) || 1;
+  printState.ui.showRelationships = els.printRelationshipToggle.checked;
+  els.printPaperFrame.classList.toggle("greyscale", !els.printColorModeToggle.checked);
+  printRenderer.render();
 }
 
 function resetTimingResults(message = "") {
@@ -571,13 +667,17 @@ els.timingResults.addEventListener("click", (event) => {
 });
 
 els.exportPdfBtn.addEventListener("click", () => {
-  const selectedTiming = state.timingResults[state.ui.activeTimingPreviewIndex] || null;
-  const previousShowGrid = state.ui.showGrid;
-  state.ui.showGrid = false;
-  renderer.render();
-  exportTimingPdfFromCanvas({ canvas: renderer.canvas, selectedTiming });
-  state.ui.showGrid = previousShowGrid;
-  renderer.render();
+  openPrintWorkspace();
+});
+
+els.printBackBtn.addEventListener("click", () => closePrintWorkspace());
+els.printFitBtn.addEventListener("click", () => printRenderer.fitToData());
+els.printTextScaleInput.addEventListener("input", () => applyPrintSettings());
+els.printColorModeToggle.addEventListener("change", () => applyPrintSettings());
+els.printRelationshipToggle.addEventListener("change", () => applyPrintSettings());
+els.printActionBtn.addEventListener("click", () => {
+  window.print();
+  closePrintWorkspace();
 });
 
 ensureRelationshipState(state);

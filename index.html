@@ -131,37 +131,37 @@
     </button>
     <button id="holeRelationPositiveToolBtn" class="toolkit-btn" type="button" title="Hole-to-Hole Positive Tool" aria-label="Hole-to-Hole Positive Tool">
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="6" cy="18" r="2"></circle>
-        <circle cx="18" cy="6" r="2"></circle>
-        <path d="M8 16l8-8"></path>
-        <path d="M13 8h3v3"></path>
+        <circle cx="5" cy="12" r="2"></circle>
+        <circle cx="19" cy="12" r="2"></circle>
+        <path d="M7 12h10"></path>
+        <path d="M14 9l3 3-3 3"></path>
       </svg>
       <span>H-H +</span>
     </button>
     <button id="holeRelationNegativeToolBtn" class="toolkit-btn" type="button" title="Hole-to-Hole Negative Tool" aria-label="Hole-to-Hole Negative Tool">
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="6" cy="18" r="2"></circle>
-        <circle cx="18" cy="6" r="2"></circle>
-        <path d="M8 16l8-8"></path>
-        <path d="M13 8h3v3"></path>
+        <circle cx="5" cy="12" r="2"></circle>
+        <circle cx="19" cy="12" r="2"></circle>
+        <path d="M7 12h10"></path>
+        <path d="M10 9l-3 3 3 3"></path>
       </svg>
       <span>H-H -</span>
     </button>
     <button id="rowRelationPositiveToolBtn" class="toolkit-btn" type="button" title="Row-to-Row Positive Tool" aria-label="Row-to-Row Positive Tool">
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="6" cy="6" r="2"></circle>
-        <circle cx="18" cy="18" r="2"></circle>
-        <path d="M8 8l8 8"></path>
-        <path d="M16 13v3h-3"></path>
+        <circle cx="12" cy="5" r="2"></circle>
+        <circle cx="12" cy="19" r="2"></circle>
+        <path d="M12 7v10"></path>
+        <path d="M9 14l3 3 3-3"></path>
       </svg>
       <span>R-R +</span>
     </button>
     <button id="rowRelationNegativeToolBtn" class="toolkit-btn" type="button" title="Row-to-Row Negative Tool" aria-label="Row-to-Row Negative Tool">
       <svg viewBox="0 0 24 24" aria-hidden="true">
-        <circle cx="6" cy="6" r="2"></circle>
-        <circle cx="18" cy="18" r="2"></circle>
-        <path d="M8 8l8 8"></path>
-        <path d="M16 13v3h-3"></path>
+        <circle cx="12" cy="5" r="2"></circle>
+        <circle cx="12" cy="19" r="2"></circle>
+        <path d="M12 7v10"></path>
+        <path d="M9 10l3-3 3 3"></path>
       </svg>
       <span>R-R -</span>
     </button>
@@ -175,6 +175,28 @@
       <span>Offset</span>
     </button>
   </div>
+
+  <section id="printWorkspace" class="print-workspace hidden" aria-label="Print Preview">
+    <div class="print-toolbar">
+      <div class="print-toolbar-group">
+        <button id="printBackBtn" type="button">Back</button>
+        <button id="printActionBtn" type="button">Print</button>
+        <button id="printFitBtn" type="button">Fit Page</button>
+      </div>
+      <div class="print-toolbar-group print-toolbar-controls">
+        <label>Text Size
+          <input id="printTextScaleInput" type="range" min="0.7" max="1.8" step="0.1" value="1">
+        </label>
+        <label><input id="printColorModeToggle" type="checkbox" checked> Color</label>
+        <label><input id="printRelationshipToggle" type="checkbox" checked> Show Relationships</label>
+      </div>
+    </div>
+    <div class="print-stage" id="printStage">
+      <div class="print-paper-frame" id="printPaperFrame">
+        <canvas id="printCanvas" width="1100" height="850"></canvas>
+      </div>
+    </div>
+  </section>
 
   <script type="module" src="js/app.js"></script>
 </body>

@@ -306,6 +306,103 @@ button:active {
   max-width: none;
 }
 
+.print-workspace {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #dfe7f1 0%, #eef3f8 100%);
+}
+
+.print-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4);
+  border-bottom: 1px solid rgba(159, 179, 201, 0.55);
+  background: rgba(248, 251, 255, 0.94);
+  box-shadow: 0 10px 24px rgba(15, 32, 56, 0.08);
+}
+
+.print-toolbar-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.print-toolbar-group button {
+  width: auto;
+  min-width: 110px;
+}
+
+.print-toolbar-controls label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: 0;
+  white-space: nowrap;
+}
+
+.print-toolbar-controls input[type="range"] {
+  width: 150px;
+  margin-top: 0;
+}
+
+.print-toolbar-controls input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.print-stage {
+  flex: 1;
+  overflow: auto;
+  padding: var(--space-6);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.print-paper-frame {
+  width: min(900px, calc(100vw - 80px));
+  aspect-ratio: 8.5 / 11;
+  background: #ffffff;
+  border: 2px solid rgba(43, 61, 82, 0.35);
+  box-shadow: 0 28px 50px rgba(15, 32, 56, 0.18);
+  padding: 22px;
+  position: relative;
+}
+
+.print-paper-frame::before {
+  content: "Print Area";
+  position: absolute;
+  top: -30px;
+  left: 0;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #52657c;
+}
+
+#printCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #ffffff;
+}
+
+.print-paper-frame.greyscale #printCanvas {
+  filter: grayscale(1);
+}
+
+body.print-preview-active .topbar,
+body.print-preview-active .canvas-wrap,
+body.print-preview-active .floating-toolkit {
+  display: none;
+}
+
 .toolkit-btn {
   width: auto;
   min-width: 56px;
@@ -399,10 +496,64 @@ button:active {
     width: min(320px, calc(100vw - 20px));
     max-height: calc(100vh - 220px);
   }
+
+  .print-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .print-toolbar-group {
+    flex-wrap: wrap;
+  }
+
+  .print-stage {
+    padding: var(--space-4);
+  }
+
+  .print-paper-frame {
+    width: calc(100vw - 32px);
+    padding: 14px;
+  }
 }
 
 @media print {
-  .floating-toolkit {
+  body * {
+    visibility: hidden;
+  }
+
+  .print-workspace,
+  .print-workspace * {
+    visibility: visible;
+  }
+
+  .print-workspace {
+    position: absolute;
+    inset: 0;
+    background: #ffffff;
+  }
+
+  .print-toolbar {
     display: none !important;
+  }
+
+  .print-stage {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .print-paper-frame {
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .print-paper-frame::before {
+    display: none;
+  }
+
+  #printCanvas {
+    width: 100%;
+    height: auto;
   }
 }

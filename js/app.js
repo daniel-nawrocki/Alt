@@ -28,6 +28,7 @@ const TOOL_TO_SIGN = {
   rowRelationshipNegative: -1,
 };
 
+const TIMING_VISUALIZATION_PULSE_WINDOW_MS = 120;
 const TIMING_VISUALIZATION_TAIL_MS = 1000;
 
 const state = {
@@ -416,6 +417,7 @@ function stepTimingVisualization(now) {
   }
 
   const durationMs = Number.isFinite(result.endTime) ? result.endTime : 0;
+  const finalVisualTimeMs = durationMs + TIMING_VISUALIZATION_PULSE_WINDOW_MS;
   if (durationMs <= 0) {
     playback.elapsedMs = 0;
     stopTimingVisualization({ completed: true });
@@ -427,8 +429,8 @@ function stepTimingVisualization(now) {
   playback.lastFrameTimestamp = now;
   if (!playback.tailStartTimestamp) {
     playback.elapsedMs += deltaMs * playback.activeSpeedMultiplier;
-    if (playback.elapsedMs >= durationMs) {
-      playback.elapsedMs = durationMs;
+    if (playback.elapsedMs >= finalVisualTimeMs) {
+      playback.elapsedMs = finalVisualTimeMs;
       playback.tailStartTimestamp = now;
     }
   } else if ((now - playback.tailStartTimestamp) >= TIMING_VISUALIZATION_TAIL_MS) {
